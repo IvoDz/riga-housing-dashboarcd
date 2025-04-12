@@ -1,14 +1,25 @@
 import plotly.express as px
 import streamlit as st
+import pandas as pd
 
-def top_x(ownership_type, df, x, year):
+def top_x(df):
+    top = st.number_input("Apkaimju skaits", 2, 30, value=5)
+    ownership_type = st.selectbox("Īpašumtiesību veids", ["Īpašnieka apdzīvoti mājokļi", "Īres mājokļi", "Citu īpašumtiesību veidu mājokļi"])
+    year = st.radio(
+            'Gads:',
+            options=['2011', '2021',]
+        )
+        
+    st.header(f"Top {top} apkaimju pēc {ownership_type} skaita ({year})")
+    
+    
     filtered = df[df['Īpašumtiesību veids'] == ownership_type]
-    top_neighborhoods = filtered[filtered['Teritoriālā vienība'] != 'Rīga'].sort_values(by="% "+ year, ascending=False).head(x)
+    top_neighborhoods = filtered[filtered['Teritoriālā vienība'] != 'Rīga'].sort_values(by="% "+ year, ascending=False).head(top)
     fig = px.bar(top_neighborhoods, 
                  x="% "+ year, 
                  y='Teritoriālā vienība',
                  labels={'% {year}}': 'Īpašnieka apdzīvotu mājokļu īpatsvars (%)', 'Teritoriālā vienība': 'Apkaime'},
-                 title=f'Top {x} apkaimes pēc {ownership_type} īpatsvara ({year})',
+                 title=f'Top {top} apkaimes pēc {ownership_type} īpatsvara ({year})',
                  text="% "+ year,
                  orientation='h')
 
@@ -21,7 +32,18 @@ def top_x(ownership_type, df, x, year):
 
     st.plotly_chart(fig)
     
-def changes_in_area(districts, df, area):
+def changes_in_area(df):
+    districts = st.multiselect(
+        'Izvēlieties apkaimes',
+        options=df['Teritoriālā vienība'].unique(),
+        default=['Ziepniekkalns', 'Teika', 'Grīziņkalns']
+    )
+    
+    area = st.selectbox(
+        'Platības kategorija uz vienu iedzīvotāju',
+        options=df['Dzīvojamā platība uz vienu iemītnieku'].unique()
+    )
+
     subset = df[
         (df['Teritoriālā vienība'].isin(districts)) & 
         (df['Dzīvojamā platība uz vienu iemītnieku'] == area)
@@ -62,3 +84,30 @@ def changes_in_area(districts, df, area):
     )
     
     st.plotly_chart(fig)
+
+def housing_type(df):
+    selected_ter = st.selectbox("Izvēlies teritoriālo vienību", sorted(df['Teritoriālā vienība'].unique()))
+    selected_veids = st.selectbox("Izvēlies mājokļu veidu", sorted(df['Dzīvojamo telpu veids'].unique()))
+
+    filtered = df[
+        (df['Teritoriālā vienība'] == selected_ter) &
+        (df['Dzīvojamo telpu veids'] == selected_veids)
+    ]
+
+    data = {
+        "Gads": ["2011", "2021", "2011", "2021"],
+        "Lielums": ["Apdzīvoti mājokļi", "Apdzīvoti mājokļi", "Personas", "Personas"],
+        "Skaits": [
+            filtered["Apdzīvoti mājokļi 2011"].values[0],
+            filtered["Apdzīvoti mājokļi 2021"].values[0],
+            filtered["Mājokļos dzīvojošās personas 2011"].values[0],
+            filtered["Mājokļos dzīvojošās personas 2021"].values[0]
+        ]
+    }
+    df_long = pd.DataFrame(data)
+
+    fig = px.bar(
+        df_long, x="Lielums", y="Skaits", color="Gads",
+        barmode="group", title=f"{selected_ter} – {selected_veids}"
+    )
+    st.plotly_chart(fig, use_container_width=True)
