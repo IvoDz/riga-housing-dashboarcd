@@ -53,3 +53,17 @@ else:
         
         st.header(f"Top {top} apkaimju pēc {ownership_type} mājokļu skaita ({year_option})")
         visualizations.top_x(ownership_type, df_owner, top, year_option)
+        
+    if chart_type == 'Platība uz vienu iedzīvotāju':
+        selected_areas = st.multiselect(
+            'Izvēlieties apkaimes',
+            options=df_area['Teritoriālā vienība'].unique(),
+            default=['Ziepniekkalns', 'Teika', 'Grīziņkalns']
+        )
+        
+        selected_area_category = st.selectbox(
+            'Platības kategorija uz vienu iedzīvotāju',
+            options=df_area['Dzīvojamā platība uz vienu iemītnieku'].unique()
+        )
+        
+        visualizations.changes_in_area(selected_areas, df_area, selected_area_category)
