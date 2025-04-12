@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import visualizations
 
 @st.cache_data
 def load_data():
@@ -35,20 +36,20 @@ if data_selection == 'Dati (CSV)':
         st.header('Platība uz vienu iedzīvotāju:')
         st.dataframe(df_area)
 else:
-    selected_district = st.sidebar.selectbox(
-        'Apkaime / rajons:',
-        options=sorted(df_owner['Teritoriālā vienība'].unique()),
-        index=0 
-    )
-
     chart_type = st.sidebar.radio(
         'Vizualizācijas veidi:',
         options=['Īpašumtiesību veids', 'Īpašumu veids', 'Platība uz vienu iedzīvotāju']
     )
 
-    year_option = st.sidebar.radio(
-        'Gads:',
-        options=['2011', '2021', 'Salīdzināt abus gadus']
-    )
-
-    st.write('TODO.')
+    st.header(f"{chart_type}")
+    
+    if chart_type == 'Īpašumtiesību veids':
+        top = st.number_input("Apkaimju skaits", 2, 20, value=5)
+        ownership_type = st.selectbox("Īpašumtiesību veids", ["Īpašnieka apdzīvoti mājokļi", "Īres mājokļi", "Citu īpašumtiesību veidu mājokļi"])
+        year_option = st.radio(
+            'Gads:',
+            options=['2011', '2021',]
+        )
+        
+        st.header(f"Top {top} apkaimju pēc {ownership_type} mājokļu skaita ({year_option})")
+        visualizations.top_x(ownership_type, df_owner, top, year_option)
